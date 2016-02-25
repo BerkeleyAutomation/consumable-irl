@@ -2,7 +2,7 @@
 
 from time import sleep
 from rlpy.Tools import plt, vec2id, mpatches, lines, id2vec
-from .Domain import Domain
+from rlpy.Domains.Domain import Domain
 import numpy as np
 
 __copyright__ = "Copyright 2013, RLPy http://acl.mit.edu/RLPy"
@@ -12,7 +12,7 @@ __license__ = "BSD 3-Clause"
 __author__ = ["Robert H. Klein", "Alborz Geramifard"]
 
 
-class PST(Domain):
+class ConsumablePST(Domain):
 
     """
     Persistent Search and Track Mission with multiple Unmanned Aerial Vehicle
@@ -196,7 +196,7 @@ class PST(Domain):
         [self.DimNames.append('UAV%d-fuel' % i) for i in xrange(NUM_UAV)]
         [self.DimNames.append('UAV%d-act' % i) for i in xrange(NUM_UAV)]
         [self.DimNames.append('UAV%d-sen' % i) for i in xrange(NUM_UAV)]
-        super(PST, self).__init__()
+        super(ConsumablePST, self).__init__()
 
     def showDomain(self, a=0):
         s = self.state
