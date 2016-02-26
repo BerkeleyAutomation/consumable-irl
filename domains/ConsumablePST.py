@@ -159,7 +159,11 @@ class ConsumablePST(Domain):
     dist_between_locations = 0
 
     ###
-    def __init__(self, NUM_UAV=3):
+    def __init__(self, goalArray,
+                encodingFunction=allMarkovEncoding,
+                rewardFunction=None,
+                goalfn=None,
+                NUM_UAV=3):
         """
         :param NUM_UAV: the number of UAVs in the domain
 
@@ -196,10 +200,28 @@ class ConsumablePST(Domain):
         [self.DimNames.append('UAV%d-fuel' % i) for i in xrange(NUM_UAV)]
         [self.DimNames.append('UAV%d-act' % i) for i in xrange(NUM_UAV)]
         [self.DimNames.append('UAV%d-sen' % i) for i in xrange(NUM_UAV)]
+
+        self.goalArray0 = np.array(goalArray)
+        self.goalArray = np.array(goalArray)
+
+        self.statedim = len(self.statespace_limits)
+
+        self.prev_states = []
+        self.encodingFunction = encodingFunction # might need a multi agent encoding
+
+        encodingLimits = []
+        for i in range(0,len(self.encodingFunction(self.prev_states))):
+            encodingLimits.append([0,1])
+
+        self.statespace_limits = np.vstack((self.statespace_limits, encodingLimits))
+        self.state_space_dims = len(self.statespace_limits)
+
+        # TODO: Update Dimnames
+
         super(ConsumablePST, self).__init__()
 
     def showDomain(self, a=0):
-        s = self.state
+        s = self.orig_state(self.state)
         if self.domain_fig is None:
             self.domain_fig = plt.figure(
                 1, (UAVLocation.SIZE * self.dist_between_locations + 1, self.NUM_UAV + 1))
@@ -387,9 +409,13 @@ class ConsumablePST(Domain):
     def step(self, a):
         # Note below that we pass the structure by reference to save time; ie,
         # components of sStruct refer directly to s
-        ns = self.state.copy()
-        sStruct = self.state2Struct(self.state)
-        nsStruct = self.state2Struct(ns)
+        state = self.orig_state(self.state)
+
+        self.prev_states.append(state)
+        sStruct = self.state2Struct(state)
+        nsStruct = self.state2Struct(state.copy()) # make sure this is updated
+        
+
         # Subtract 1 below to give -1,0,1, easily sum actions
         # returns list of form [0,1,0,2] corresponding to action of each uav
         actionVector = np.array(id2vec(a, self.LIMITS))
@@ -444,7 +470,8 @@ class ConsumablePST(Domain):
         totalStepReward = 0
 
         ns = self.struct2State(nsStruct)
-        self.state = ns.copy()
+        self.state = self.augment_state(ns)
+
 
         ##### Compute reward #####
         if self.isCommStatesCovered:
@@ -468,7 +495,18 @@ class ConsumablePST(Domain):
             fuel,
             actuator,
             sensor)
+
+        self.prev_states = []
+        self.goalArray = np.array(self.goalArray0)
+        self.state = self.augment_state(self.state)
         return self.state.copy(), self.isTerminal(), self.possibleActions()
+
+    def augment_state(self, state):
+        return np.concatenate((state, 
+                            self.encodingFunction(self.prev_states)))
+
+    def orig_state(self, state):
+        return self.state.copy()[:self.statedim]
 
     def state2Struct(self, s):
         """
@@ -478,6 +516,7 @@ class ConsumablePST(Domain):
         :returns: PST.StateStruct -- the custom structure used by this domain.
 
         """
+        assert len(s) == self.statedim
         # Only perform multiplication once to save time
         fuelEndInd = 2 * self.NUM_UAV
         actuatorEndInd = 3 * self.NUM_UAV
@@ -513,7 +552,7 @@ class ConsumablePST(Domain):
         )
 
     def possibleActions(self):
-        s = self.state
+        s = self.orig_state(self.state)
         # return the id of possible actions
         # find empty blocks (nothing on top)
         # Contains a list of uav_actions lists, e.g. [[0,1,2],[0,1],[1,2]] with
@@ -612,7 +651,8 @@ class ConsumablePST(Domain):
                     limits)  # TODO remove self
 
     def isTerminal(self):
-        sStruct = self.state2Struct(self.state)
+        state = self.orig_state(self.state)
+        sStruct = self.state2Struct(state)
         return (
             np.any(np.logical_and(sStruct.fuel <= 0,
                    sStruct.locations != UAVLocation.REFUEL))
