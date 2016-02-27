@@ -17,10 +17,15 @@ domain_params:
 #         - [0.9, 0.4]
 #     noise: 0.1
 
-representation: rlpy.Representations.IncrementalTabular
+representation: rlpy.Representations.RBF
 representation_params:
-    # domain is implicit as defined above
-    discretization: 10
+    num_rbfs: 1000
+    resolution_max: 25
+    resolution_min: 25
+    const_feature: False
+    normalize: True
+    seed: 1
+
 
 policy: rlpy.Policies.eGreedy
 policy_params:
@@ -38,5 +43,5 @@ agent_params:
     boyan_N0: 238
 
 checks_per_policy: 5
-max_steps: 15000
+max_steps: 150000
 num_policy_checks: 5

@@ -27,12 +27,12 @@ class GoalPathPlanner:
 		opt["agent"] = Q_Learning(representation=representation, policy=policy,
                        discount_factor=domain.discount_factor,
                        initial_learn_rate=0.1,
-                       learn_rate_decay_mode="boyan", boyan_N0=100,
-                       lambda_=0.)
+                       learn_rate_decay_mode="boyan", boyan_N0=238,
+                       lambda_=0.9)
     
-		opt["checks_per_policy"] = 10
+		opt["checks_per_policy"] = 5
 		opt["max_steps"] = steps
-		opt["num_policy_checks"] = 20
+		opt["num_policy_checks"] = 5
 		experiment = Experiment(**opt)
 		experiment.run()
 		self.policy = opt["agent"].policy

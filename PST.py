@@ -38,7 +38,7 @@ def test_trajectories(param_path='./params.yaml'):
                 **params.policy_params)
 
     import ipdb; ipdb.set_trace()
-    d = GoalPathPlanner(domain, representation, policy, steps=5000)
+    d = GoalPathPlanner(domain, representation, policy, params.max_steps)
     trajs = d.generateTrajectories(N=5)
 
     import pickle
