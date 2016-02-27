@@ -160,7 +160,7 @@ class ConsumablePST(Domain):
 
     ###
     def __init__(self, goalArray,
-                encodingFunction=allMarkovEncoding,
+                encodingFunction=None, # allMarkovEncoding, - Not yet
                 rewardFunction=None,
                 goalfn=None,
                 NUM_UAV=3):
