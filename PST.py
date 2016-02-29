@@ -41,6 +41,7 @@ def test_trajectories(param_path='./params.yaml'):
     d = GoalPathPlanner(domain, representation, policy, params.max_steps)
     trajs = d.generateTrajectories(N=5)
 
+    return 
     import pickle
     with open("pst_trajs.p", "w") as f:
         pickle.dump(trajs, f)
@@ -68,12 +69,21 @@ def run_experiment_params(param_path='./params.yaml'):
 #    params.domain_params['goalfn'] = goalfn
 #    params.domain_params['encodingFunction'] = encode_trial()
 #    # params.domain_params['goalArray'] = params.domain_params['goalArray'][::4]
+    
     domain = eval(params.domain)(**params.domain_params)
     # domain = eval(params.domain)()
+    # import ipdb; ipdb.set_trace()
+    if hasattr(params, "initrep"):
+        initrep = eval(params.initrep)(
+                        domain,
+                        **params.initrep_params
+                        )
 
     #Load Representation
     representation = eval(params.representation)(
                 domain, 
+                params.discover_threshold,
+                initrep, #assume working with iFDD
                 **params.representation_params)
     policy = eval(params.policy)(
                 representation, 
@@ -83,6 +93,8 @@ def run_experiment_params(param_path='./params.yaml'):
                 representation,
                 discount_factor=domain.discount_factor, 
                 **params.agent_params)
+
+    # import ipdb; ipdb.set_trace()
 
     opt = {}
     opt["exp_id"] = params.exp_id
@@ -109,18 +121,18 @@ def run_experiment_params(param_path='./params.yaml'):
 
 if __name__ == '__main__':
     import sys
-    test_trajectories(sys.argv[1])
-    # experiment = run_experiment_params(sys.argv[1])
+    # test_trajectories(sys.argv[1])
+    experiment = run_experiment_params(sys.argv[1])
 
 
-    # experiment.run(visualize_steps=0,  # should each learning step be shown?
-    #                visualize_learning=False,
-    #                visualize_performance=False)  # show policy / value function?
-    #                # saveTrajectories=False)  # show performance runs?
+    experiment.run(visualize_steps=0,  # should each learning step be shown?
+                   visualize_learning=False,
+                   visualize_performance=False)  # show policy / value function?
+                   # saveTrajectories=False)  # show performance runs?
     
     # experiment.domain.showLearning(experiment.agent.representation)
 
     # experiment.plotTrials(save=True)
     # experiment.plot(save=True, x = "learning_episode") #, y="reward")
-    experiment.save()
+    # experiment.save()
 
