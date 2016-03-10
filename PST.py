@@ -5,6 +5,7 @@ Runs experiment with custom domain
 __author__ = "Richard Liaw"
 import rlpy
 from rlpy.Tools import deltaT, clock, hhmmss, getTimeStr
+from tsc.tsc import TransitionStateClustering
 # from .. import visualize_trajectories as visual
 import os
 import yaml
@@ -15,6 +16,8 @@ from rlpy.CustomDomains import RCIRL, Encoding, allMarkovReward
 from mp.goalpaths import GoalPathPlanner
 import domains
 
+TRAJ_FILE = "pst_trajs.p"
+
 
 def allMarkovEncoding(ps,k=1):
     return [0]*k
@@ -24,27 +27,39 @@ def load_yaml(file_path):
         ret_val = yaml.load(f)
     return ret_val
 
-def test_trajectories(param_path='./params.yaml'):
-    params = type("Parameters", (), load_yaml(param_path))
-    domain = eval(params.domain)(**params.domain_params)
-    # domain = eval(params.domain)()
-
-    #Load Representation
-    representation = eval(params.representation)(
-                domain, 
-                **params.representation_params)
-    policy = eval(params.policy)(
-                representation, 
-                **params.policy_params)
-
+def test_trajectories(experiment):
+    """
+    Takes a trained experiment and generate trajectories
+    , and dump trajectories into a file
+    """
     import ipdb; ipdb.set_trace()
-    d = GoalPathPlanner(domain, representation, policy, params.max_steps)
-    trajs = d.generateTrajectories(N=5)
+    
+    d = GoalPathPlanner()
+    d.replace_policy(experiment.agent.policy)
+    d.replace_domain(experiment.domain)
+    trajs = d.generateTrajectories(N=15)
 
-    return 
     import pickle
-    with open("pst_trajs.p", "w") as f:
+    with open(TRAJ_FILE, "w") as f:
         pickle.dump(trajs, f)
+
+def get_waypoints(trajectory_fn=TRAJ_FILE):
+    """
+    Take trajectory pickle file and pass throuh TSC to get waypoints
+    """
+    import pickle
+    with open(trajectory_fn, "r") as f:
+        trajs = pickle.load(f)
+
+    tsc = TransitionStateClustering(window_size=2)
+    for t in trajs:
+        N = len(t)
+        demo = np.zeros((N,4))
+        for i in range(N):
+            demo[i] = t[i][0:4]
+        tsc.addDemonstration(demo)
+    tsc.fit(normalize=False, pruning=0.5)
+    ac = [tuple(int(round(y)) for y in a.means_[0]) for a in tsc.model]
 
     import ipdb; ipdb.set_trace()
 
@@ -60,14 +75,15 @@ def run_experiment_params(param_path='./params.yaml'):
 #            np.linalg.norm(np.array(position)
 #                           - np.array(goal)) < radius
 #        )
-#    # # Load domain
-#    def encode_trial():
-#        rewards = list(params.domain_params['goalArray'])
-#        encode = Encoding(rewards, goalfn)
-#        return encode.strict_encoding
+    # # Load domain
+    goalfn = lambda state, goal: np.array_equal(state, goal)
+    def encode_trial():
+       rewards = list(params.waypoints)
+       encode = Encoding(rewards, goalfn)
+       return encode.strict_encoding
 #
 #    params.domain_params['goalfn'] = goalfn
-#    params.domain_params['encodingFunction'] = encode_trial()
+    params.domain_params['encodingFunction'] = encode_trial()
 #    # params.domain_params['goalArray'] = params.domain_params['goalArray'][::4]
     
     domain = eval(params.domain)(**params.domain_params)
@@ -129,7 +145,9 @@ if __name__ == '__main__':
                    visualize_learning=False,
                    visualize_performance=False)  # show policy / value function?
                    # saveTrajectories=False)  # show performance runs?
-    
+
+    # test_trajectories(experiment)
+    # get_waypoints()
     # experiment.domain.showLearning(experiment.agent.representation)
 
     # experiment.plotTrials(save=True)

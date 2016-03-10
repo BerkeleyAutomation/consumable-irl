@@ -8,14 +8,17 @@ experiment: rlpy.Experiments.Experiment
 
 # domain: rlpy.Domains.Pinball
 
-domain: rlpy.Domains.PST
+domain: domains.ConsumablePST
 domain_params:
     NUM_UAV: 4
-#     goalArray:
-#         - [0.8, 0.1]
-#         - [0.9, 0.2]
-#         - [0.9, 0.4]
-#     noise: 0.1
+
+waypoints:
+     - [2, 1, 3, 1]
+     - [3, 2, 1, 1]
+     - [2, 2, 1, 1]
+     - [1, 1, 1, 0]
+     - [2, 3, 2, 0]
+     - [1, 1, 2, 1]
 
 initrep: rlpy.Representations.IndependentDiscretization
 initrep_params:
@@ -50,4 +53,4 @@ agent_params:
 
 checks_per_policy: 5
 max_steps: 300000
-num_policy_checks: 10
+num_policy_checks: 15

@@ -19,8 +19,12 @@ class GoalPathPlanner:
 	This class takes a domain as a parameter
 	and learns a model to completion.
 	"""
-	def __init__(self, domain, representation, policy,steps=100000):
+	def __init__(self, domain=None, representation=None, policy=None,steps=100000):
 		
+
+		if domain is None:
+			return 
+
 		opt = {}
 		opt["domain"] = domain
 		# Agent
@@ -38,12 +42,19 @@ class GoalPathPlanner:
 		self.policy = opt["agent"].policy
 		self.domain = domain
 
+	def replace_policy(self, policy):
+		self.policy = policy
+
+	def replace_domain(self, domain):
+		self.domain = domain
+
 	"""
 	Using the policy this generates a set
 	of trajectories
 	"""
 	def generateTrajectories(self, N=10):
 		demonstrations = []
+		self.policy.turnOffExploration()
 		for i in range(0, N):
 			traj = []
 			cur_state = self.domain.s0()[0]
@@ -55,7 +66,8 @@ class GoalPathPlanner:
 					break
 
 				a = self.policy.pi(cur_state, terminal,self.domain.possibleActions())
-				cur_state = self.domain.step(a)[1]
+				total_results = self.domain.step(a)
+				cur_state = total_results[1]
 				
 			demonstrations.append(traj)
 		return demonstrations

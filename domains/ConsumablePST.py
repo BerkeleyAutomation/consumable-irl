@@ -159,10 +159,10 @@ class ConsumablePST(Domain):
     dist_between_locations = 0
 
     ###
-    def __init__(self, goalArray,
+    def __init__(self, # goalArray,
                 encodingFunction=None, # allMarkovEncoding, - Not yet
-                rewardFunction=None,
-                goalfn=None,
+                # rewardFunction=None,
+                # goalfn=None,
                 NUM_UAV=3):
         """
         :param NUM_UAV: the number of UAVs in the domain
@@ -201,8 +201,8 @@ class ConsumablePST(Domain):
         [self.DimNames.append('UAV%d-act' % i) for i in xrange(NUM_UAV)]
         [self.DimNames.append('UAV%d-sen' % i) for i in xrange(NUM_UAV)]
 
-        self.goalArray0 = np.array(goalArray)
-        self.goalArray = np.array(goalArray)
+        # self.goalArray0 = np.array(goalArray)
+        # self.goalArray = np.array(goalArray)
 
         self.statedim = len(self.statespace_limits)
 
@@ -469,8 +469,8 @@ class ConsumablePST(Domain):
 
         totalStepReward = 0
 
-        ns = self.struct2State(nsStruct)
-        self.state = self.augment_state(ns)
+        ns = self.augment_state(self.struct2State(nsStruct))
+        self.state = ns
 
 
         ##### Compute reward #####
@@ -497,7 +497,7 @@ class ConsumablePST(Domain):
             sensor)
 
         self.prev_states = []
-        self.goalArray = np.array(self.goalArray0)
+        # self.goalArray = np.array(self.goalArray0)
         self.state = self.augment_state(self.state)
         return self.state.copy(), self.isTerminal(), self.possibleActions()
 
