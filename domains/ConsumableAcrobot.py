@@ -235,6 +235,49 @@ class ConsumableAcrobot(Domain):
         ddtheta1 = -(d2 * ddtheta2 + phi1) / d1
         return (dtheta1, dtheta2, ddtheta1, ddtheta2, 0.)
 
+    def visualize_trajectory(self, trajectory=[[0,0,0]], alphafn=lambda i, n: (i + 0.5) / n):
+        """
+        Plot the 2 links + action arrows
+        TODO goal?
+        """
+        self.domain_fig = plt.figure()
+        self.domain_ax = self.domain_fig.add_axes(
+            [0, 0, 1, 1], frameon=True, aspect=1.)
+        ax = self.domain_ax
+
+        # Allow room for pendulum to swing without getting cut off on graph
+        viewable_distance = self.LINK_LENGTH_1 + self.LINK_LENGTH_2 + 0.5
+        ax.set_xlim(-viewable_distance, +viewable_distance)
+        ax.set_ylim(-viewable_distance, viewable_distance)
+
+        # can add goals here
+
+        # add bar
+        bar = lines.Line2D([-viewable_distance, viewable_distance],
+                           [self.LINK_LENGTH_1, self.LINK_LENGTH_1],
+                           linewidth=1, color='red')
+        ax.add_line(bar)
+
+        tln = float(len(trajectory))
+        for i, s in enumerate(trajectory):
+            link1 = lines.Line2D([], [], linewidth=2, color='black', alpha=alphafn(i, tln))
+            link2 = lines.Line2D([], [], linewidth=2, color='blue', alpha=alphafn(i, tln))
+            ax.add_line(link1)
+            ax.add_line(link2)
+            # ax.set_aspect('equal')
+
+            # update pendulum arm on figure
+            p1 = [-self.LINK_LENGTH_1 *
+                  np.cos(s[0]), self.LINK_LENGTH_1 * np.sin(s[0])]
+
+            link1.set_data([0., p1[1]], [0., p1[0]])
+            p2 = [p1[0] - self.LINK_LENGTH_2 * np.cos(s[0] + s[1]),
+                  p1[1] + self.LINK_LENGTH_2 * np.sin(s[0] + s[1])]
+            link2.set_data([p1[1], p2[1]], [p1[0], p2[0]])
+
+        plt.show()
+
+
     def showDomain(self, a=0):
         """
         Plot the 2 links + action arrows
