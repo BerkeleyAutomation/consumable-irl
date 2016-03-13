@@ -255,13 +255,13 @@ class ConsumableAcrobot(Domain):
         # add bar
         bar = lines.Line2D([-viewable_distance, viewable_distance],
                            [self.LINK_LENGTH_1, self.LINK_LENGTH_1],
-                           linewidth=1, color='red')
+                           linewidth=1, color='green')
         ax.add_line(bar)
 
         tln = float(len(trajectory))
         for i, s in enumerate(trajectory):
-            link1 = lines.Line2D([], [], linewidth=2, color='black', alpha=alphafn(i, tln))
-            link2 = lines.Line2D([], [], linewidth=2, color='blue', alpha=alphafn(i, tln))
+            link1 = lines.Line2D([], [], linewidth=2, color='deepskyblue', alpha=alphafn(i, tln))
+            link2 = lines.Line2D([], [], linewidth=2, color='orange', alpha=alphafn(i, tln))
             ax.add_line(link1)
             ax.add_line(link2)
             # ax.set_aspect('equal')
