@@ -311,6 +311,53 @@ class RCIRL(Domain):
     
         return [x,y]
 
+    def visualize_trajectory(self, trajectory=[[0,0,0,0], [0.1,0.1,0,0]]):
+        domain_fig = plt.figure()
+        if self.wallArray is not None:
+            for xmin, ymin, dx, dy in self.wallArray:
+                plt.gca().add_patch(
+                    mpatches.Rectangle(
+                        [xmin,
+                         ymin],
+                        dx,
+                        dy,
+                        color='r',
+                        alpha=.4)
+                )
+
+        # Goal
+        for goal in self.goalArray:
+            plt.gca(
+            ).add_patch(
+                plt.Circle(
+                    goal[:2],
+                    radius=self.GOAL_RADIUS,
+                    color='g',
+                    alpha=.4))
+            plt.xlim([self.XMIN, self.XMAX])
+            plt.ylim([self.YMIN, self.YMAX])
+            plt.gca().set_aspect('1')
+
+        for i, s in enumerate(trajectory):
+            x, y, speed, heading = s[:4]
+            car_xmin = x - self.REAR_WHEEL_RELATIVE_LOC
+            car_ymin = y - self.CAR_WIDTH / 2.
+            # # Car
+            # if self.car_fig is not None:
+            #     plt.gca().patches.remove(self.car_fig)
+
+            car_fig = mpatches.Rectangle(
+                [car_xmin,
+                 car_ymin],
+                self.CAR_LENGTH,
+                self.CAR_WIDTH,
+                alpha=(0.8 * i) / len(trajectory) )
+            rotation = mpl.transforms.Affine2D().rotate_deg_around(
+                x, y, heading * 180 / np.pi) + plt.gca().transData
+            car_fig.set_transform(rotation)
+            plt.gca().add_patch(car_fig)
+
+
 
     def showDomain(self, a):
         s = self.state
