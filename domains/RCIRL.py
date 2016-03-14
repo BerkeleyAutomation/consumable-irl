@@ -311,7 +311,24 @@ class RCIRL(Domain):
     
         return [x,y]
 
-    def visualize_trajectory(self, trajectory=[[0,0,0,0], [0.1,0.1,0,0]]):
+    def visualize_trajectory(self, trajectory=[[0,0,0,0], 
+                                                [0.1,0.1, 0, 0.3],
+                                                [0.5,0.1, 0, 0.3]]):
+        def get_image():
+            fn = "prius.png" # cbook.get_sample_data("necked_tensile_specimen.png")
+            arr = plt.imread(fn)
+            # make background transparent
+            # you won't have to do this if your car image already has a transparent background
+            mask = (arr == (1,1,1,1)).all(axis=-1)
+            arr[mask] = 0
+            return arr
+
+        def imshow_affine(ax, z, *args, **kwargs):
+            im = ax.imshow(z, *args, **kwargs)
+            x1, x2, y1, y2 = im.get_extent()
+            im._image_skew_coordinate = (x2, y1)
+            return im
+
         domain_fig = plt.figure()
         if self.wallArray is not None:
             for xmin, ymin, dx, dy in self.wallArray:
@@ -334,29 +351,41 @@ class RCIRL(Domain):
                     radius=self.GOAL_RADIUS,
                     color='g',
                     alpha=.4))
-            plt.xlim([self.XMIN, self.XMAX])
-            plt.ylim([self.YMIN, self.YMAX])
-            plt.gca().set_aspect('1')
 
-        for i, s in enumerate(trajectory):
+        car = get_image()
+        fig, ax = plt.subplots()
+
+        for i, s in enumerate(trajectory, start=1):
             x, y, speed, heading = s[:4]
             car_xmin = x - self.REAR_WHEEL_RELATIVE_LOC
-            car_ymin = y - self.CAR_WIDTH / 2.
-            # # Car
-            # if self.car_fig is not None:
-            #     plt.gca().patches.remove(self.car_fig)
+            car_ymin = y - self.CAR_WIDTH / 2
+            im = imshow_affine(ax, car, interpolation='none',
+                               extent=[0, self.CAR_LENGTH, 0, self.CAR_WIDTH], clip_on=True,
+                               alpha=0.8*i/len(trajectory))
 
-            car_fig = mpatches.Rectangle(
-                [car_xmin,
-                 car_ymin],
-                self.CAR_LENGTH,
-                self.CAR_WIDTH,
-                alpha=(0.8 * i) / len(trajectory) )
-            rotation = mpl.transforms.Affine2D().rotate_deg_around(
-                x, y, heading * 180 / np.pi) + plt.gca().transData
-            car_fig.set_transform(rotation)
-            plt.gca().add_patch(car_fig)
+            center_x, center_y = self.CAR_LENGTH//2, self.CAR_WIDTH//2
 
+            im_trans = (mpl.transforms.Affine2D()
+                        .translate(car_xmin, car_ymin)
+                        .rotate_deg_around(x, y, heading * 180 / np.pi)
+                        + ax.transData)
+            im.set_transform(im_trans)
+
+            # car_fig = mpatches.Rectangle(
+            #     [car_xmin,
+            #      car_ymin],
+            #     self.CAR_LENGTH,
+            #     self.CAR_WIDTH,
+            #     alpha=(0.8 * i) / len(trajectory) )
+            # rotation = mpl.transforms.Affine2D().rotate_deg_around(
+            #     x, y, heading * 180 / np.pi) + plt.gca().transData
+            # car_fig.set_transform(rotation)
+            # plt.gca().add_patch(car_fig)
+
+
+        plt.xlim([self.XMIN, self.XMAX])
+        plt.ylim([self.YMIN, self.YMAX])
+        plt.gca().set_aspect('1')
 
 
     def showDomain(self, a):
@@ -388,9 +417,9 @@ class RCIRL(Domain):
                         radius=self.GOAL_RADIUS,
                         color='g',
                         alpha=.4))
-                plt.xlim([self.XMIN, self.XMAX])
-                plt.ylim([self.YMIN, self.YMAX])
-                plt.gca().set_aspect('1')
+            plt.xlim([self.XMIN, self.XMAX])
+            plt.ylim([self.YMIN, self.YMAX])
+            plt.gca().set_aspect('1')
         # Car
         if self.car_fig is not None:
             plt.gca().patches.remove(self.car_fig)
